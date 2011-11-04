@@ -3,10 +3,12 @@ flowdock     = require "flowdock"
 
 class Flowdock extends Robot
   send: (user, strings...) ->
+    console.log('sending dat')
     strings.forEach (str) =>
       @bot.chatMessage(user.flow.subdomain, user.flow.name, str)
 
   reply: (user, strings...) ->
+    console.log('sending dat')
     strings.forEach (str) =>
       @send user, "#{user.name}: #{str}"
 
@@ -16,6 +18,7 @@ class Flowdock extends Robot
       login_email:    process.env.HUBOT_FLOWDOCK_LOGIN_EMAIL
       login_password: process.env.HUBOT_FLOWDOCK_LOGIN_PASSWORD
 
+    console.log options
     bot = new flowdock.Session(options.login_email, options.login_password)
     bot.fetchFlows((flows) =>
       flows.forEach (flow) =>
@@ -31,6 +34,7 @@ class Flowdock extends Robot
     )
 
     bot.on "message", (message) =>
+      console.log(message)
       return unless message.event == 'message'
       flow = bot.flows.filter((flow) -> return flow.name == message.flow)[0]
       author = @userForId(message.user)
