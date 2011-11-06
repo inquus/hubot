@@ -17,9 +17,14 @@ quotes =
     """
   ]
 
+detective = [
+  "I'm Detective John Kimble!",
+  "I'm a cop you idiot!"
+]
+
 module.exports = (robot) ->
   robot.respond /who are you\?+/, (msg) ->
-    msg.send "I'm Detective John Carter, you idiot!"
+    msg.send detective[Math.floor(math.random() * 2)]
 
   robot.respond /quote (me )? (.*)[.!]?/, (msg) ->
     thing = msg.match[2]
