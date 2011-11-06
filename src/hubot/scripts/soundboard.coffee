@@ -24,9 +24,9 @@ detective = [
 
 module.exports = (robot) ->
   robot.respond /who are you\?+/, (msg) ->
-    msg.send detective[Math.floor(math.random() * 2)]
+    msg.send detective[Math.floor(Math.random() * 2)]
 
-  robot.respond /quote (me )? (.*)[.!]?/, (msg) ->
+  robot.respond /quote (me )?(.*)[.!]?/, (msg) ->
     thing = msg.match[2]
 
     for title, possibilities of quotes
