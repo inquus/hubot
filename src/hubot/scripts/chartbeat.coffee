@@ -14,7 +14,7 @@ module.exports = (robot) ->
     restler
       .get(data_uri, parser: restler.parsers.json)
       .on 'complete', (data) ->
-        msg.send "There are #{data.visits} people online; #{data.write} are writing."
+        msg.send "Right now, there are #{data.visits} people online; #{data.write} are writing."
       .on 'error', (error) ->
         msg.send "Uh-oh, something went wrong :( Chartbeat told me #{error}."
 
@@ -36,8 +36,10 @@ module.exports = (robot) ->
           if data.error
             msg.send "Uh-oh, something went wrong :( Chartbeat told me #{data.error}"
           else
+            reference = time_frame_string[0].toUpperCase() + time_frame_string.substring(1)
+
             summary = data.summary
-            msg.send "There were #{summary.visits} online; #{summary.write} were writing."
+            msg.send "#{reference}, there were #{summary.visits} online; #{summary.write} were writing."
         .on 'error', (error) ->
           msg.send "Uh-oh, something went wrong :( Chartbeat told me #{error}"
     else
