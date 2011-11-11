@@ -23,12 +23,12 @@ module.exports = (robot) ->
     date = Date.parse time_frame_string
     date_now = new Date
 
-    date.setHours date_now.getHours()
-    date.setMinutes date_now.getMinutes()
-    date.setSeconds date_now.getSeconds()
-
     if date
       msg.send 'Looking into it…'
+
+      date.setHours date_now.getHours()
+      date.setMinutes date_now.getMinutes()
+      date.setSeconds date_now.getSeconds()
 
       restler
         .get(date_uri(date), parser: restler.parsers.json)
