@@ -19,7 +19,7 @@ module.exports = (robot) ->
         msg.send "Uh-oh, something went wrong :( Chartbeat told me #{error}."
 
   robot.respond /how many people were on(line) ([^?]+)\??$/i, (msg) =>
-    time_frame_string = msg.match[1]
+    time_frame_string = msg.match[2]
     date = Date.parse time_frame_string
     date_now = new Date
 
