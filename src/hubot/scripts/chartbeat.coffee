@@ -100,7 +100,7 @@ module.exports = (robot) ->
       average_writes = Math.floor((data[0].summary.write + data[1].summary.write + data[2].summary.write)/3)
       
       
-      msg.send "Over the past three weeks we have averaged #{average_visits} visits and #{average_writes} people writing #{time_frame_string}"
+      msg.send "Over the previous three weeks we have averaged #{average_visits} visits and #{average_writes} people writing #{time_frame_string}"
     )
 # date.js
 `/**
