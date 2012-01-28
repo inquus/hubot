@@ -83,9 +83,9 @@ module.exports = (robot) ->
       
       query_urls = Array()
       
-      day_minus_1 = date.addWeeks(-1)
-      day_minus_2 = date.addWeeks(-2)
-      day_minus_3 = date.addWeeks(-3)
+      day_minus_1 = date.clone().addWeeks(-1)
+      day_minus_2 = date.clone().addWeeks(-2)
+      day_minus_3 = date.clone().addWeeks(-3)
       
       query_urls.push(date_uri(day_minus_1))
       query_urls.push(date_uri(day_minus_2))
