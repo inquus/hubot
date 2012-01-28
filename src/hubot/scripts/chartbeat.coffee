@@ -45,6 +45,58 @@ module.exports = (robot) ->
     else
       msg.send "Not quite sure when #{time_frame_string} is :("
 
+  robot.respond /how many people will be on(line)? ([0-9?]+) ([^?]+) from now\??/i, (msg) =>
+    time_amount = Number(msg.match[2]).valueOf()
+    time_frame = msg.match[3].toLowerCase()
+    date = new Date
+    
+    if /hour(s)?/i.test(time_frame)
+      date = date.addHours(time_amount)
+    else if /minute(s)?/i.test(time_frame)
+      date = date.addMinutes(time_amount)
+    else if /day(s)?/i.test(time_frame)
+      date = date.addDays(time_amount)
+    else if /second(s)/i.test(time_frame)
+      date = date.addSeconds(time_amount)
+    else
+      msg.send "I'm not quite sure on what planet #{time_frame} exists as a valid unit of measurement for time."
+      return
+    
+    if date
+      msg.send "Calculating my prediction..."
+      
+      day_minus_1 = date.addWeeks(-1)
+      day_minus_2 = date.addWeeks(-2)
+      day_minus_3 = date.addWeeks(-3)
+      
+      restler
+        .get(date_uri(day_minus_1), parser: restler.parsers.json)
+        .on 'complete', (data1) ->
+          
+          restler
+            .get(date_uri(day_minus_2), parser: restler.parsers.json)
+            .on 'complete', (data2) ->
+              
+              restler
+                .get(date_uri(day_minus_3), parser: restler.parsers.json)
+                .on 'complete', (data3) ->
+                  average_visits = (data1.summary.visits + data2.summary.visits + data3.summary.visits)/3
+                  average_writes = (data1.summary.write + data2.summary.write + data3.summary.write)/3
+                  time_frame_string = time_amount + " " + time_frame + " from now"
+                  
+                  
+                  msg.send "Over the past three weeks we have averaged #{average_visits} visits and #{average_writes} people writing #{time_frame_string}"
+                .on 'error', (error) ->
+                  msg.send "Chartbeat failed like a flouder with error message #{error}"
+              
+            .on 'error', (error) ->
+              msg.send "Chartbeat failed like a flouder with error message #{error}"
+            
+        .on 'error', (error) ->
+          msg.send "Chartbeat failed like a flouder with error message #{error}"
+    else
+      msg.send "I don't know when #{time_frame_string} will be."
+
 # date.js
 `/**
  * Version: 1.0 Alpha-1 
