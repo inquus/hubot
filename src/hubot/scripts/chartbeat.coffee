@@ -87,13 +87,13 @@ module.exports = (robot) ->
     
     query_urls = Array()
     
-    day_minus_1 = date.clone().addWeeks(-1)
-    day_minus_2 = date.clone().addWeeks(-2)
-    day_minus_3 = date.clone().addWeeks(-3)
+    date_minus_1 = date.clone().addWeeks(-1)
+    date_minus_2 = date.clone().addWeeks(-2)
+    date_minus_3 = date.clone().addWeeks(-3)
     
-    query_urls.push(date_uri(day_minus_1))
-    query_urls.push(date_uri(day_minus_2))
-    query_urls.push(date_uri(day_minus_3))
+    query_urls.push date_uri(date_minus_1)
+    query_urls.push date_uri(date_minus_2)
+    query_urls.push date_uri(date_minus_3)
     
     query_chartbeat_sequentially(query_urls, Array(), (data) ->
       average_visits = Math.floor((data[0].summary.visits + data[1].summary.visits + data[2].summary.visits)/3)
@@ -102,7 +102,6 @@ module.exports = (robot) ->
       
       msg.send "Over the past three weeks we have averaged #{average_visits} visits and #{average_writes} people writing #{time_frame_string}"
     )
-
 # date.js
 `/**
  * Version: 1.0 Alpha-1 
