@@ -82,6 +82,10 @@ module.exports = (robot) ->
       else
         msg.send "I'm not quite sure on what planet \"#{time_frame}\" exists as a valid unit of measurement for time."
         return
+    
+    if date > new Date().addWeeks(1)
+      msg.send "I can't collect data based on that time."
+      return
 
     msg.send "Calculating..."
     
