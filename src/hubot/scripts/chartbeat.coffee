@@ -92,8 +92,8 @@ module.exports = (robot) ->
       query_urls.push(date_uri(day_minus_3))
       
       query_chartbeat_sequentially(query_urls, Array(), (data) ->
-        average_visits = (data[0].summary.visits + data[1].summary.visits + data[2].summary.visits)/3
-        average_writes = (data[0].summary.write + data[1].summary.write + data[2].summary.write)/3
+        average_visits = Math.floor((data[0].summary.visits + data[1].summary.visits + data[2].summary.visits)/3)
+        average_writes = Math.floor((data[0].summary.write + data[1].summary.write + data[2].summary.write)/3)
         time_frame_string = time_amount + " " + time_frame + " from now"
         
         
