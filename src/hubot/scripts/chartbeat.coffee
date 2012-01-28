@@ -79,12 +79,14 @@ module.exports = (robot) ->
         date = date.addDays(time_amount)
       else if /second(s)/i.test(time_frame)
         date = date.addSeconds(time_amount)
+      else if /week(s)/i.test(time_frame)
+        date = date.addWeeks(time_amount)
       else
         msg.send "I'm not quite sure on what planet \"#{time_frame}\" exists as a valid unit of measurement for time."
         return
     
     if date > new Date().addWeeks(1)
-      msg.send "I can't collect data based on that time."
+      msg.send "Stop treating me like a crystal ball and get back to work."
       return
 
     msg.send "Calculating..."
