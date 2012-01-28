@@ -61,46 +61,47 @@ module.exports = (robot) ->
     else
       msg.send "Not quite sure when #{time_frame_string} is :("
 
-  robot.respond /how many people will be on(line)? ([0-9?]+) ([^?]+) from now\??/i, (msg) =>
-    time_amount = Number(msg.match[2]).valueOf()
-    time_frame = msg.match[3].toLowerCase()
+  robot.respond /how many people (will be|are usually) on(line)? (([0-9?]+) ([^?]+) from now|right now)\??/i, (msg) =>
     date = new Date
     
-    if /hour(s)?/i.test(time_frame)
-      date = date.addHours(time_amount)
-    else if /minute(s)?/i.test(time_frame)
-      date = date.addMinutes(time_amount)
-    else if /day(s)?/i.test(time_frame)
-      date = date.addDays(time_amount)
-    else if /second(s)/i.test(time_frame)
-      date = date.addSeconds(time_amount)
+    if /right now/i.test(msg.match[3])
+      time_frame_string = "right now"
     else
-      msg.send "I'm not quite sure on what planet #{time_frame} exists as a valid unit of measurement for time."
-      return
+      time_amount = Number(msg.match[4]).valueOf()
+      time_frame = msg.match[5].toLowerCase()
+      time_frame_string = time_amount + " " + time_frame + " from now"
     
-    if date
-      msg.send "Calculating my prediction..."
+      if /hour(s)?/i.test(time_frame)
+        date = date.addHours(time_amount)
+      else if /minute(s)?/i.test(time_frame)
+        date = date.addMinutes(time_amount)
+      else if /day(s)?/i.test(time_frame)
+        date = date.addDays(time_amount)
+      else if /second(s)/i.test(time_frame)
+        date = date.addSeconds(time_amount)
+      else
+        msg.send "I'm not quite sure on what planet \"#{time_frame}\" exists as a valid unit of measurement for time."
+        return
+
+    msg.send "Calculating..."
+    
+    query_urls = Array()
+    
+    day_minus_1 = date.clone().addWeeks(-1)
+    day_minus_2 = date.clone().addWeeks(-2)
+    day_minus_3 = date.clone().addWeeks(-3)
+    
+    query_urls.push(date_uri(day_minus_1))
+    query_urls.push(date_uri(day_minus_2))
+    query_urls.push(date_uri(day_minus_3))
+    
+    query_chartbeat_sequentially(query_urls, Array(), (data) ->
+      average_visits = Math.floor((data[0].summary.visits + data[1].summary.visits + data[2].summary.visits)/3)
+      average_writes = Math.floor((data[0].summary.write + data[1].summary.write + data[2].summary.write)/3)
       
-      query_urls = Array()
       
-      day_minus_1 = date.clone().addWeeks(-1)
-      day_minus_2 = date.clone().addWeeks(-2)
-      day_minus_3 = date.clone().addWeeks(-3)
-      
-      query_urls.push(date_uri(day_minus_1))
-      query_urls.push(date_uri(day_minus_2))
-      query_urls.push(date_uri(day_minus_3))
-      
-      query_chartbeat_sequentially(query_urls, Array(), (data) ->
-        average_visits = Math.floor((data[0].summary.visits + data[1].summary.visits + data[2].summary.visits)/3)
-        average_writes = Math.floor((data[0].summary.write + data[1].summary.write + data[2].summary.write)/3)
-        time_frame_string = time_amount + " " + time_frame + " from now"
-        
-        
-        msg.send "Over the past three weeks we have averaged #{average_visits} visits and #{average_writes} people writing #{time_frame_string}"
-      )
-    else
-      msg.send "I don't know when #{time_frame_string} will be."
+      msg.send "Over the past three weeks we have averaged #{average_visits} visits and #{average_writes} people writing #{time_frame_string}"
+    )
 
 # date.js
 `/**
