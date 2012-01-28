@@ -7,6 +7,22 @@ date_uri = (date) ->
   "http://api.chartbeat.com/historical/dashapi/snapshots/?api=pages&host=#{CB_HOST}&apikey=#{CB_API_KEY}&" +
   "timestamp=#{Number(date) / 1000}"
 
+chartbeat_error_handler = (error) ->
+  msg.send "Uh-oh, something went wrong :( Chartbeat told me #{error}"
+
+query_chartbeat_sequentially = (urls, received_data, complete_callback) ->
+  restler
+    .get(urls.shift(), parser: restler.parsers.json)
+    .on 'complete', (data) ->
+      received_data.push(data)
+      
+      if urls.length == 0
+        complete_callback(received_data)
+      else
+        query_chartbeat_sequentially(urls, received_data, complete_callback)
+    .on 'error', (error) ->
+      chartbeat_error_handler(error)
+
 module.exports = (robot) ->
   robot.respond /how many people are on(line)?( right now)?\??/i, (msg) ->
     msg.send 'Let me check that for you…'
@@ -65,35 +81,24 @@ module.exports = (robot) ->
     if date
       msg.send "Calculating my prediction..."
       
+      query_urls = Array()
+      
       day_minus_1 = date.addWeeks(-1)
       day_minus_2 = date.addWeeks(-2)
       day_minus_3 = date.addWeeks(-3)
       
-      restler
-        .get(date_uri(day_minus_1), parser: restler.parsers.json)
-        .on 'complete', (data1) ->
-          
-          restler
-            .get(date_uri(day_minus_2), parser: restler.parsers.json)
-            .on 'complete', (data2) ->
-              
-              restler
-                .get(date_uri(day_minus_3), parser: restler.parsers.json)
-                .on 'complete', (data3) ->
-                  average_visits = (data1.summary.visits + data2.summary.visits + data3.summary.visits)/3
-                  average_writes = (data1.summary.write + data2.summary.write + data3.summary.write)/3
-                  time_frame_string = time_amount + " " + time_frame + " from now"
-                  
-                  
-                  msg.send "Over the past three weeks we have averaged #{average_visits} visits and #{average_writes} people writing #{time_frame_string}"
-                .on 'error', (error) ->
-                  msg.send "Chartbeat failed like a flouder with error message #{error}"
-              
-            .on 'error', (error) ->
-              msg.send "Chartbeat failed like a flouder with error message #{error}"
-            
-        .on 'error', (error) ->
-          msg.send "Chartbeat failed like a flouder with error message #{error}"
+      query_urls.push(date_uri(day_minus_1))
+      query_urls.push(date_uri(day_minus_2))
+      query_urls.push(date_uri(day_minus_3))
+      
+      query_chartbeat_sequentially(query_urls, Array(), (data) ->
+        average_visits = (data[0].summary.visits + data[1].summary.visits + data[2].summary.visits)/3
+        average_writes = (data[0].summary.write + data[1].summary.write + data[2].summary.write)/3
+        time_frame_string = time_amount + " " + time_frame + " from now"
+        
+        
+        msg.send "Over the past three weeks we have averaged #{average_visits} visits and #{average_writes} people writing #{time_frame_string}"
+      )
     else
       msg.send "I don't know when #{time_frame_string} will be."
 
