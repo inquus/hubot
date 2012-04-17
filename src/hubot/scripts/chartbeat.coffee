@@ -7,6 +7,22 @@ date_uri = (date) ->
   "http://api.chartbeat.com/historical/dashapi/snapshots/?api=pages&host=#{CB_HOST}&apikey=#{CB_API_KEY}&" +
   "timestamp=#{Number(date) / 1000}"
 
+chartbeat_error_handler = (error) ->
+  msg.send "Uh-oh, something went wrong :( Chartbeat told me #{error}"
+
+query_chartbeat_sequentially = (urls, received_data, complete_callback) ->
+  restler
+    .get(urls.shift(), parser: restler.parsers.json)
+    .on 'complete', (data) ->
+      received_data.push(data)
+      
+      if urls.length == 0
+        complete_callback(received_data)
+      else
+        query_chartbeat_sequentially(urls, received_data, complete_callback)
+    .on 'error', (error) ->
+      chartbeat_error_handler(error)
+
 module.exports = (robot) ->
   robot.respond /how many \w+ are on(line)?( right now)?\??/i, (msg) ->
     msg.send 'Let me check that for you…'
@@ -18,8 +34,8 @@ module.exports = (robot) ->
       .on 'error', (error) ->
         msg.send "Uh-oh, something went wrong :( Chartbeat told me #{error}."
 
-  robot.respond /how many \w+ were on(line)( [^?]+)\??$/i, (msg) =>
-    time_frame_string = msg.match[1].substring(1)
+  robot.respond /how many \w+ were on(line)?( [^?]+)\??$/i, (msg) =>
+    time_frame_string = msg.match[2].substring(1)
     date = Date.parse time_frame_string
     date_now = new Date
 
@@ -45,6 +61,53 @@ module.exports = (robot) ->
     else
       msg.send "Not quite sure when #{time_frame_string} is :("
 
+  robot.respond /how many people (will be|are usually) on(line)? (([0-9?]+) ([^?]+) from now|right now)\??/i, (msg) =>
+    date = new Date
+    
+    if /right now/i.test(msg.match[3])
+      time_frame_string = "right now"
+    else
+      time_amount = Number(msg.match[4]).valueOf()
+      time_frame = msg.match[5].toLowerCase()
+      time_frame_string = time_amount + " " + time_frame + " from now"
+    
+      if /hour(s)?/i.test(time_frame)
+        date = date.addHours(time_amount)
+      else if /minute(s)?/i.test(time_frame)
+        date = date.addMinutes(time_amount)
+      else if /day(s)?/i.test(time_frame)
+        date = date.addDays(time_amount)
+      else if /second(s)/i.test(time_frame)
+        date = date.addSeconds(time_amount)
+      else if /week(s)/i.test(time_frame)
+        date = date.addWeeks(time_amount)
+      else
+        msg.send "I'm not quite sure on what planet \"#{time_frame}\" exists as a valid unit of measurement for time."
+        return
+    
+    if date > new Date().addWeeks(1)
+      msg.send "Stop treating me like a crystal ball and get back to work."
+      return
+
+    msg.send "Calculating..."
+    
+    query_urls = Array()
+    
+    date_minus_1 = date.clone().addWeeks(-1)
+    date_minus_2 = date.clone().addWeeks(-2)
+    date_minus_3 = date.clone().addWeeks(-3)
+    
+    query_urls.push date_uri(date_minus_1)
+    query_urls.push date_uri(date_minus_2)
+    query_urls.push date_uri(date_minus_3)
+    
+    query_chartbeat_sequentially(query_urls, Array(), (data) ->
+      average_visits = Math.floor((data[0].summary.visits + data[1].summary.visits + data[2].summary.visits)/3)
+      average_writes = Math.floor((data[0].summary.write + data[1].summary.write + data[2].summary.write)/3)
+      
+      
+      msg.send "Over the previous three weeks we have averaged #{average_visits} visits and #{average_writes} people writing #{time_frame_string}"
+    )
 # date.js
 `/**
  * Version: 1.0 Alpha-1 
