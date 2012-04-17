@@ -8,7 +8,7 @@ date_uri = (date) ->
   "timestamp=#{Number(date) / 1000}"
 
 module.exports = (robot) ->
-  robot.respond /how many people are on(line)?( right now)?\??/i, (msg) ->
+  robot.respond /how many \w+ are on(line)?( right now)?\??/i, (msg) ->
     msg.send 'Let me check that for you…'
 
     restler
@@ -18,8 +18,8 @@ module.exports = (robot) ->
       .on 'error', (error) ->
         msg.send "Uh-oh, something went wrong :( Chartbeat told me #{error}."
 
-  robot.respond /how many people were on(line) ([^?]+)\??$/i, (msg) =>
-    time_frame_string = msg.match[1]
+  robot.respond /how many \w+ were on(line)( [^?]+)\??$/i, (msg) =>
+    time_frame_string = msg.match[1].substring(1)
     date = Date.parse time_frame_string
     date_now = new Date
 
