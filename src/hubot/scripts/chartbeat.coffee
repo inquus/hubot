@@ -63,7 +63,7 @@ module.exports = (robot) ->
     else
       msg.send "Not quite sure when #{time_frame_string} is :("
 
-  robot.respond /how many (\w+) (will be|are usually) on(line)?( ([0-9?]+) ([^?]+) from now|right now)\??/i, (msg) =>
+  robot.respond /how many (\w+) (will be|are usually) on(line)?( ?([0-9?]+) ([^?]+) from now|right now)?\?/i, (msg) =>
     term = msg.match[1]
     date = new Date
     
