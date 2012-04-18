@@ -24,18 +24,20 @@ query_chartbeat_sequentially = (urls, received_data, complete_callback) ->
       chartbeat_error_handler(error)
 
 module.exports = (robot) ->
-  robot.respond /how many \w+ are on(line)?( right now)?\??/i, (msg) ->
+  robot.respond /how many (\w+) are on(line)?( right now)?\??/i, (msg) ->
+    term = msg.match[1]
     msg.send 'Let me check that for you…'
 
     restler
       .get(data_uri, parser: restler.parsers.json)
       .on 'complete', (data) ->
-        msg.send "Right now, there are #{data.visits} people online; #{data.write} are writing."
+        msg.send "Right now, there are #{data.visits} #{term} online; #{data.write} are writing."
       .on 'error', (error) ->
         msg.send "Uh-oh, something went wrong :( Chartbeat told me #{error}."
 
-  robot.respond /how many \w+ were on(line)?( [^?]+)\??$/i, (msg) =>
-    time_frame_string = msg.match[2].substring(1)
+  robot.respond /how many (\w+) were on(line)?( [^?]+)\??$/i, (msg) =>
+    term = msg.match[1]
+    time_frame_string = msg.match[3].substring(1)
     date = Date.parse time_frame_string
     date_now = new Date
 
@@ -55,20 +57,21 @@ module.exports = (robot) ->
             reference = time_frame_string[0].toUpperCase() + time_frame_string.substring(1)
 
             summary = data.summary
-            msg.send "#{reference}, there were #{summary.visits} online; #{summary.write} were writing."
+            msg.send "#{reference}, there were #{summary.visits} #{term} online; #{summary.write} were writing."
         .on 'error', (error) ->
           msg.send "Uh-oh, something went wrong :( Chartbeat told me #{error}"
     else
       msg.send "Not quite sure when #{time_frame_string} is :("
 
-  robot.respond /how many people (will be|are usually) on(line)? (([0-9?]+) ([^?]+) from now|right now)\??/i, (msg) =>
+  robot.respond /how many (\w+) (will be|are usually) on(line)?( ([0-9?]+) ([^?]+) from now|right now)\??/i, (msg) =>
+    term = msg.match[1]
     date = new Date
     
-    if /right now/i.test(msg.match[3])
+    if /right now/i.test(msg.match[4])
       time_frame_string = "right now"
     else
-      time_amount = Number(msg.match[4]).valueOf()
-      time_frame = msg.match[5].toLowerCase()
+      time_amount = Number(msg.match[5]).valueOf()
+      time_frame = msg.match[6].toLowerCase()
       time_frame_string = time_amount + " " + time_frame + " from now"
     
       if /hour(s)?/i.test(time_frame)
@@ -106,7 +109,7 @@ module.exports = (robot) ->
       average_writes = Math.floor((data[0].summary.write + data[1].summary.write + data[2].summary.write)/3)
       
       
-      msg.send "Over the previous three weeks we have averaged #{average_visits} visits and #{average_writes} people writing #{time_frame_string}"
+      msg.send "Over the previous three weeks we have averaged #{average_visits} #{term} and #{average_writes} #{term} writing #{time_frame_string}"
     )
 # date.js
 `/**
