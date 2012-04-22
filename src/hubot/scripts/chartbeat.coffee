@@ -1,6 +1,6 @@
 restler = require 'restler'
 
-CB_HOST = 'new.openstudy.com'
+CB_HOST = 'openstudy.com'
 CB_API_KEY = 'def9f22c9b057f914a388b4f2f164384'
 data_uri = "http://api.chartbeat.com/live/quickstats/?host=#{CB_HOST}&apikey=#{CB_API_KEY}"
 date_uri = (date) ->
